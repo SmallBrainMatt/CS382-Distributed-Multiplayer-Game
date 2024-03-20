@@ -1,0 +1,31 @@
+body {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    text-align: center;
+}
+
+#board {
+    height:540px;
+    width: 630px;
+    background-color: blue;
+    border: 10px solid black;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.tile {
+    height: 70px;
+    width: 70px;
+    margin: 5px;
+    background-color: white;
+    border-radius: 50%;
+    border: 5px solid black;
+}
+
+.red-circle {
+    background-color: red;
+}
+
+.yellow-circle {
+    background-color: yellow;
+}
