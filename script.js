@@ -11,6 +11,19 @@ var NumOfColumns = 7;
 
 
 window.onload = function() {
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+
+    socket.on('playerNumber', playerNumber => {
+        console.log('You are player ' + playerNumber);
+    });
+
+
+    socket.on('placePiece', data => {
+        placePiece(data);
+    });
+
     gameStart();
 }
 
@@ -28,7 +41,12 @@ function gameStart() {
             tile.id = r.toString() + "-" + c.toString();
             tile.classList.add("tile");
 
-            tile.addEventListener("click", placePiece) // calls 
+            tile.addEventListener("click", () => {
+                if (activePlayer === playerRed) {
+                    socket.emit('placePiece', { row: r, col: c, player: activePlayer });
+                }
+            });
+
             document.getElementById("board").append(tile)
         }
         board.push(row)
