@@ -8,6 +8,7 @@ var board;
 
 var NumOfRows = 6;
 var NumOfColumns = 7;
+var socket = io();
 
 
 window.onload = function() {
@@ -20,8 +21,26 @@ window.onload = function() {
     });
 
 
-    socket.on('placePiece', data => {
-        placePiece(data);
+    socket.on('updateGame', gameState => {
+        board = gameState.board;
+        currentColumns = gameState.currentColumns;
+        updateBoard();
+    });
+
+    socket.on('showWinningMove', data => {
+        updateBoard();
+        let winnerMessage = document.getElementById("winner");
+        winnerMessage.innerText = data.winner + " Wins!";
+    });
+
+    document.getElementById("restartButton").addEventListener("click", () => {
+        socket.emit('restartGame');
+        
+    });
+
+    socket.on('restartGame', () => {
+        // clear the text with the winner at the top when reset button is clicked
+        document.getElementById("winner").innerText = "";
     });
 
     gameStart();
@@ -42,8 +61,9 @@ function gameStart() {
             tile.classList.add("tile");
 
             tile.addEventListener("click", () => {
-                if (activePlayer === playerRed) {
-                    socket.emit('placePiece', { row: r, col: c, player: activePlayer });
+                if (!gameOver && activePlayer === playerRed) {
+                    let col = parseInt(tile.id.split("-")[1]);
+                    socket.emit('placePiece', col); // Send the column index to the server.
                 }
             });
 
@@ -83,54 +103,6 @@ function placePiece() {
     
 }
 
-function checkWinner() {
-    for (let r = 0; r < NumOfRows; r++) {
-        for (let c = 0; c < NumOfColumns - 3 /* -3 so we don't go out of bounds */; c++) {
-            if (board[r][c] != ' ') {
-                if (board[r][c] == board[r][c+1] && board[r][c+1] == board[r][c+2]  && board[r][c+2] == board[r][c+3]) {
-                    setWinner(r,c)
-                    return;
-                }
-            }
-
-        }
-    }
-
-    for (let c = 0; c < NumOfColumns; c++) {
-        for (let r = 0; r < NumOfRows - 3 /* -3 so we don't go out of bounds */; r++) {
-            if (board[r][c] != ' ') {
-                if (board[r][c] == board[r+1][c] && board[r+1][c] == board[r+2][c] && board[r+2][c] == board[r+3][c]) {
-                    setWinner(r,c);
-                    return;
-                }
-            }
-        }
-
-    }
-
-    for (let r = 0; r < NumOfRows - 3; r++) {
-        for (let c = 0; c < NumOfColumns - 3 /* -3 so we don't go out of bounds */; c++) {
-            if (board[r][c] != ' ') {
-                if (board[r][c] == board[r+1][c+1] && board[r+1][c+1] == board[r+2][c+2] && board[r+3][c+3]){
-                    setWinner(r,c);
-                    return;
-                }
-            }
-        }
-    }
-
-    for (let r = 3; r < NumOfRows; r++) {
-        for (let c = 0; c < NumOfColumns - 3; c++) {
-            if (board[r][c] != ' ') {
-                if (board[r][c] == board[r-1][c+1] && board[r-1][c+1] == board[r-2][c+2] && board[r-2][c+2] == board[r-3][c+3]) {
-                    setWinner(r, c);
-                    return;
-                }
-            }
-        }
-    }
-}
-
 function setWinner(r,c) {
     let winner = document.getElementById("winner");
     if (board[r][c] == playerRed) {
@@ -140,4 +112,17 @@ function setWinner(r,c) {
         winner.innerText = "Yellow Wins";
     }
     gameOver = true;
+}
+
+function updateBoard() {
+    for (let r = 0; r < NumOfRows; r++) {
+        for (let c = 0; c < NumOfColumns; c++) {
+            let tile = document.getElementById(r.toString() + "-" + c.toString());
+            tile.className = "tile";
+            let tokenToAdd = board[r][c] === playerRed ? "red-circle" : (board[r][c] === playerYellow ? "yellow-circle" : "");
+            if (tokenToAdd !== "") {
+                tile.classList.add(tokenToAdd);
+            }
+        }
+    }
 }
